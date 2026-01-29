@@ -1,0 +1,24 @@
+name: deploy-kafka-stack
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            cd /home/${{ secrets.SSH_USER }}/kafka-stack
+            git pull
+            docker compose pull || true
+            docker compose up -d --build
+            docker compose ps
+            curl -fsS http://localhost:9090/-/healthy
